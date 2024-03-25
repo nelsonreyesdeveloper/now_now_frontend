@@ -1,12 +1,41 @@
 import { createBrowserRouter } from "react-router-dom";
+import { AuthLayout } from "./layouts/AuthLayout";
+import Login from "./views/Login";
+import RecuperarPassword from "./views/RecuperarPassword";
+import { Dashboard } from "./layouts/DashBoardLayout";
+import ListadoTareas from "./views/ListadoTareas";
+import NuevaTarea from "./views/NuevaTarea";
 
 const router = createBrowserRouter([
   {
-    element: <div>Home</div>,
+    path: "/",
+    element: <AuthLayout></AuthLayout>,
     children: [
       {
-        path: "posts",
-        element: <div>Posts</div>,
+        index: true,
+        element: <Login></Login>,
+      },
+      {
+        path: "forgot-password",
+        element: <RecuperarPassword></RecuperarPassword>,
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <div>404</div>,
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard></Dashboard>,
+    children: [
+      {
+        index: true,
+        element: <ListadoTareas></ListadoTareas>,
+      },
+      {
+        path: "nueva-tarea",
+        element: <NuevaTarea></NuevaTarea>,
       },
     ],
   },
