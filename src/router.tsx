@@ -5,6 +5,7 @@ import RecuperarPassword from "./views/RecuperarPassword";
 import { Dashboard } from "./layouts/DashBoardLayout";
 import ListadoTareas from "./views/ListadoTareas";
 import NuevaTarea from "./views/NuevaTarea";
+import ValidarContraseñaPrimerIngreso from "./views/ValidarContraseñaPrimerIngreso";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,12 @@ const router = createBrowserRouter([
       {
         path: "forgot-password",
         element: <RecuperarPassword></RecuperarPassword>,
+      },
+      {
+        path: "primer-ingreso",
+        element: (
+          <ValidarContraseñaPrimerIngreso></ValidarContraseñaPrimerIngreso>
+        ),
       },
     ],
   },

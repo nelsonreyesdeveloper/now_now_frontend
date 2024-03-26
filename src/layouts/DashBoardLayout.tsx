@@ -12,9 +12,38 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, Outlet } from "react-router-dom"; //eslint-disable-line
+import { useEffect } from "react";
+import generateTitle from "@/utils/generateTitle";
+import useAuth from "@/hooks/useAuthHook";
+import { useNavigate } from "react-router-dom";
 
 export function Dashboard() {
+  generateTitle("Farmacia - Dashboard");
+
+  const { token, Logout } = useAuth();
+  const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  useEffect(() => {
+    if (user) {
+      if (user.defaultPassword === 1) {
+        navigate("/primer-ingreso");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+    }
+  }, [token]);
+
   const { pathname } = useLocation();
+
+  const logout = async () => {
+    Logout();
+  };
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky  top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -58,9 +87,11 @@ export function Dashboard() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={logout}>
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -71,10 +102,24 @@ export function Dashboard() {
         </div>
         <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
           <nav className="grid gap-4 text-sm text-muted-foreground">
-            <Link to={"/dashboard"} className={pathname === "/dashboard" ? "font-bold" : ""}>
+            <Link
+              to={"/dashboard"}
+              className={pathname === "/dashboard" ? "font-bold" : ""}
+            >
               TAREAS ASIGNADAS
             </Link>
-            <Link className={pathname === "/dashboard/nueva-tarea" ? "font-bold" : ""} to={"/dashboard/nueva-tarea"}>AÑADIR NUEVAS TAREAS</Link>
+
+            {user.roles[0] === "super-admin" && (
+              <Link
+                className={
+                  pathname === "/dashboard/nueva-tarea" ? "font-bold" : ""
+                }
+                to={"/dashboard/nueva-tarea"}
+              >
+                AÑADIR NUEVAS TAREAS
+              </Link>
+            )}
+
             {/* 
             <Link href="#">Integrations</Link>
             <Link href="#">Support</Link>
