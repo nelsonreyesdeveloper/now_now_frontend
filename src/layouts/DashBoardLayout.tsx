@@ -12,9 +12,42 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, Outlet } from "react-router-dom"; //eslint-disable-line
+import { useEffect } from "react";
+import generateTitle from "@/utils/generateTitle";
+import useAuth from "@/hooks/useAuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function Dashboard() {
+  generateTitle("Farmacia - Dashboard");
+
+  const { token, logout, user, obteniendoUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+    } else {
+      obteniendoUser();
+    }
+  }, [token]); //eslint-disable-line
+
+  useEffect(() => {
+    if (user) {
+      if (user.defaultPassword === 1) {
+        navigate("/primer-ingreso");
+      }
+    }
+  }, [user]); //eslint-disable-line
+
   const { pathname } = useLocation();
+
+  const onClickLogout = async () => {
+    logout();
+  };
+  console.log(user);
+  if (!user) {
+    return null;
+  }
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky  top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -58,9 +91,14 @@ export function Dashboard() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={onClickLogout}
+              >
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -71,10 +109,24 @@ export function Dashboard() {
         </div>
         <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
           <nav className="grid gap-4 text-sm text-muted-foreground">
-            <Link to={"/dashboard"} className={pathname === "/dashboard" ? "font-bold" : ""}>
+            <Link
+              to={"/dashboard"}
+              className={pathname === "/dashboard" ? "font-bold" : ""}
+            >
               TAREAS ASIGNADAS
             </Link>
-            <Link className={pathname === "/dashboard/nueva-tarea" ? "font-bold" : ""} to={"/dashboard/nueva-tarea"}>AÑADIR NUEVAS TAREAS</Link>
+
+            {user.roles[0]["name"] === "super-admin" && (
+              <Link
+                className={
+                  pathname === "/dashboard/nueva-tarea" ? "font-bold" : ""
+                }
+                to={"/dashboard/nueva-tarea"}
+              >
+                AÑADIR NUEVAS TAREAS
+              </Link>
+            )}
+
             {/* 
             <Link href="#">Integrations</Link>
             <Link href="#">Support</Link>
