@@ -12,11 +12,11 @@ import useAuthContext from "@/hooks/useAuthContext";
 const Login = () => {
   generateTitle("Farmacia - Login");
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams(); //eslint-disable-line
 
   const navigate = useNavigate();
 
-  const { token, setToken, login: iniciarSesion } = useAuthContext();
+  const { token, setToken, login: iniciarSesion } = useAuthContext(); //eslint-disable-line
 
   useEffect(() => {
     if (searchParams.get("user") && searchParams.get("password")) {
@@ -98,7 +98,7 @@ const Login = () => {
           Recuperar cuenta?
         </Link>
         <Button
-          onClick={handleSubmit(onSubmit)}
+          onClick={handleSubmit(onSubmit)} //eslint-disable-line
           className="w-full bg-black text-white hover:bg-black"
         >
           Login

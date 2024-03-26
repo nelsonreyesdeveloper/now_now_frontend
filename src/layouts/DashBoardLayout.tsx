@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import generateTitle from "@/utils/generateTitle";
 import useAuth from "@/hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 export function Dashboard() {
   generateTitle("Farmacia - Dashboard");
@@ -126,6 +127,16 @@ export function Dashboard() {
                 AÑADIR NUEVAS TAREAS
               </Link>
             )}
+            {user.roles[0]["name"] === "super-admin" && (
+              <Link
+                className={
+                  pathname === "/dashboard/nuevos-usuarios" ? "font-bold" : ""
+                }
+                to={"/dashboard/nuevos-usuarios"}
+              >
+                AÑADIR NUEVOS USUARIOS
+              </Link>
+            )}
 
             {/* 
             <Link href="#">Integrations</Link>
@@ -138,6 +149,7 @@ export function Dashboard() {
           </div>
         </div>
       </main>
+      <ToastContainer></ToastContainer>
     </div>
   );
 }

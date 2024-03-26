@@ -23,7 +23,7 @@ interface LoginCredentials {
 }
 
 export const AuthContext = createContext<AuthContextProps>({
-  user: null,
+  user: {} as User,
   isAuthenticated: false,
   setUser: () => {},
   setIsAuthenticated: () => {},

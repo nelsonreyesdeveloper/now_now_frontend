@@ -6,6 +6,7 @@ import { Dashboard } from "./layouts/DashBoardLayout";
 import ListadoTareas from "./views/ListadoTareas";
 import NuevaTarea from "./views/NuevaTarea";
 import ValidarContraseñaPrimerIngreso from "./views/ValidarContraseñaPrimerIngreso";
+import NuevosUsuarios from "./views/NuevosUsuarios";
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: "nueva-tarea",
         element: <NuevaTarea></NuevaTarea>,
+      },
+      {
+        path: "nuevos-usuarios",
+        element: <NuevosUsuarios></NuevosUsuarios>,
       },
     ],
   },
