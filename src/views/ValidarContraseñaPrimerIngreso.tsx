@@ -44,7 +44,7 @@ const ValidarContraseñaPrimerIngreso = () => {
     setError(false);
 
     const dataFormated = {
-      email: user?.email,
+      email: user.email,
       password: data.password,
       password_confirmation: data.password_confirmation,
       password_temporal: data.password_temporal,

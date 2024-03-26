@@ -3,7 +3,7 @@ import { FormDataReset } from "@/types/types";
 
 import { User } from "@/types/types";
 interface AuthContextProps {
-  user: User | null;
+  user: User;
   token: string | null;
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
