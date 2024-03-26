@@ -14,16 +14,22 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, Outlet } from "react-router-dom"; //eslint-disable-line
 import { useEffect } from "react";
 import generateTitle from "@/utils/generateTitle";
-import useAuth from "@/hooks/useAuthHook";
+import useAuth from "@/hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
 
 export function Dashboard() {
   generateTitle("Farmacia - Dashboard");
 
-  const { token, Logout } = useAuth();
+  const { token, logout, user, obteniendoUser } = useAuth();
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+    } else {
+      obteniendoUser();
+    }
+  }, [token]); //eslint-disable-line
 
   useEffect(() => {
     if (user) {
@@ -31,19 +37,17 @@ export function Dashboard() {
         navigate("/primer-ingreso");
       }
     }
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/");
-    }
-  }, [token]);
+  }, [user]); //eslint-disable-line
 
   const { pathname } = useLocation();
 
-  const logout = async () => {
-    Logout();
+  const onClickLogout = async () => {
+    logout();
   };
+  console.log(user);
+  if (!user) {
+    return null;
+  }
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky  top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -89,7 +93,10 @@ export function Dashboard() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer" onClick={logout}>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={onClickLogout}
+              >
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -109,7 +116,7 @@ export function Dashboard() {
               TAREAS ASIGNADAS
             </Link>
 
-            {user.roles[0] === "super-admin" && (
+            {user.roles[0]["name"] === "super-admin" && (
               <Link
                 className={
                   pathname === "/dashboard/nueva-tarea" ? "font-bold" : ""

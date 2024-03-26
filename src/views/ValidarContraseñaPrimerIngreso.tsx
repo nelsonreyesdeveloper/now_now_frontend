@@ -3,13 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import useAuth from "@/hooks/useAuthHook";
 import { useNavigate } from "react-router-dom";
-
-type FormData = {
-  password: string;
-  password_confirmation: string;
-};
+import useAuthContext from "@/hooks/useAuthContext";
+import { FormDataReset } from "@/types/types";
 
 const ValidarContraseñaPrimerIngreso = () => {
   const {
@@ -20,27 +16,41 @@ const ValidarContraseñaPrimerIngreso = () => {
 
   const navigate = useNavigate();
 
-  const { Logout } = useAuth();
+  const { logout, user, resetPassword, token, obteniendoUser } =
+    useAuthContext();
 
   const [error, setError] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  useEffect(() => {
+    obteniendoUser();
+  }, []);
 
   useEffect(() => {
     if (user) {
       if (user.defaultPassword === 0) {
         navigate("/dashboard");
       }
+    } else if (!user && !token) {
+      navigate("/");
     }
-  }, []);
+  }, [user]);
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: FormDataReset) => {
     if (data.password !== data.password_confirmation) {
       setError(true);
       return;
     }
 
     setError(false);
+
+    const dataFormated = {
+      email: user?.email,
+      password: data.password,
+      password_confirmation: data.password_confirmation,
+      password_temporal: data.password_temporal,
+    };
+
+    resetPassword(dataFormated);
   };
 
   return (
@@ -55,13 +65,30 @@ const ValidarContraseñaPrimerIngreso = () => {
       <div className="grid gap-4">
         <div className="grid gap-2">
           <div className="flex items-center">
-            <Label htmlFor="password">Contraseña</Label>
+            <Label htmlFor="password_temporal">Contraseña temporal</Label>
+          </div>
+          <Input
+            onKeyUp={() => setError(false)}
+            {...register("password_temporal", { required: true })}
+            id="password_temporal"
+            type="text"
+            required
+          />
+          {errors.password_temporal?.type === "required" && (
+            <p className="text-red-500">
+              La contraseña temporal es obligatoria
+            </p>
+          )}
+        </div>
+        <div className="grid gap-2">
+          <div className="flex items-center">
+            <Label htmlFor="password_reset">Contraseña</Label>
           </div>
           <Input
             onKeyUp={() => setError(false)}
             {...register("password", { required: true })}
             placeholder="***********"
-            id="password"
+            id="password_reset"
             type="password"
             required
           />
@@ -71,7 +98,7 @@ const ValidarContraseñaPrimerIngreso = () => {
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
-            <Label htmlFor="password">Confirmar contraseña</Label>
+            <Label htmlFor="password_confirmation">Confirmar contraseña</Label>
           </div>
           <Input
             onKeyUp={() => setError(false)}
@@ -99,7 +126,7 @@ const ValidarContraseñaPrimerIngreso = () => {
           )}
         </div>
         <Button
-          onClick={() => Logout()}
+          onClick={() => logout()}
           className="ml-auto inline-block text-sm underline"
         >
           Cerrar Sesion?

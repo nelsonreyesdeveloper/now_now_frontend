@@ -4,11 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import useAuth from "@/hooks/useAuthHook";
 import generateTitle from "@/utils/generateTitle";
 
 import { UserType } from "@/types/types";
 import { useSearchParams } from "react-router-dom";
+import useAuthContext from "@/hooks/useAuthContext";
 const Login = () => {
   generateTitle("Farmacia - Login");
 
@@ -16,7 +16,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const { token, setToken, Login } = useAuth();
+  const { token, setToken, login: iniciarSesion } = useAuthContext();
 
   useEffect(() => {
     if (searchParams.get("user") && searchParams.get("password")) {
@@ -25,10 +25,11 @@ const Login = () => {
         JSON.stringify(searchParams.get("password"))
       );
       const data: UserType = {
-        email: searchParams.get("user")?.toString(), // Optional chaining
-        password: searchParams.get("password")?.toString(),
+        email: searchParams.get("user") as string,
+        password: searchParams.get("password") as string,
       };
-      Login(data);
+      console.log(data);
+      iniciarSesion(data);
     }
   }, []);
 
@@ -51,7 +52,7 @@ const Login = () => {
       return;
     }
 
-    Login(data);
+    iniciarSesion(data);
   };
   return (
     <div className="mx-auto grid w-[350px] gap-6">
