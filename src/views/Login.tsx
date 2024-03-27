@@ -10,7 +10,7 @@ import { UserType } from "@/types/types";
 import { useSearchParams } from "react-router-dom";
 import useAuthContext from "@/hooks/useAuthContext";
 const Login = () => {
-  generateTitle("Farmacia - Login");
+  generateTitle("Tareas - Login");
 
   const [searchParams, setSearchParams] = useSearchParams(); //eslint-disable-line
 

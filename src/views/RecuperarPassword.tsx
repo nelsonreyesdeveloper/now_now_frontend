@@ -27,14 +27,20 @@ const RecuperarPassword = () => {
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
-            {...register("email", { required: true })}
+            {...register("email", {
+              required: true,
+              pattern: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/i,
+            })}
             id="email"
             type="email"
             placeholder="m@example.com"
             required
           />
-          {errors.email?.type === "required" && (
+          {errors.password?.type === "required" && (
             <p className="text-red-500">El email es obligatorio</p>
+          )}
+          {errors.email?.type === "pattern" && (
+            <p className="text-red-500">El email no es valido</p>
           )}
         </div>
         <Link to={"/"} className="ml-auto inline-block text-sm underline">

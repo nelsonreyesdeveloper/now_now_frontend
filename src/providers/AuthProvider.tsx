@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from "react";
 import { FormDataReset } from "@/types/types";
 
 import { User } from "@/types/types";
+import { toast } from "react-toastify";
 interface AuthContextProps {
   user: User;
   token: string | null;
@@ -91,7 +92,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setToken(data.access_token);
         setIsAuthenticated(true);
       } else {
-        // Handle login failure (display error message, etc.)
+        const data = await response.json();
+        toast.error(data.error);
       }
     } catch (error) {
       console.error("Login error:", error);

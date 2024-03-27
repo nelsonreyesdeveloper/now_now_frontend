@@ -11,6 +11,7 @@ interface TareasContextProps {
   nuevaTareaPost: (data: any) => Promise<any>;
   nuevoUsuarioPost?: (data: any) => Promise<any>;
   forgotPassword?: (data: string) => Promise<any>;
+  ObtenerTodasLasTareas?: () => Promise<any>;
 }
 
 export const TareasContext = createContext<TareasContextProps>({
@@ -20,6 +21,7 @@ export const TareasContext = createContext<TareasContextProps>({
   nuevaTareaPost: () => Promise.resolve([]),
   nuevoUsuarioPost: () => Promise.resolve([]),
   forgotPassword: () => Promise.resolve([]),
+  ObtenerTodasLasTareas: () => Promise.resolve([]),
 });
 
 const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -140,6 +142,27 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const ObtenerTodasLasTareas = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/tareas`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const forgotPassword = async (data: string) => {
     try {
       const response = await fetch(
@@ -158,7 +181,9 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         toast.success(response2.message);
         return true;
       } else {
-        console.log("Error al enviar el correo");
+        const data = await response.json();
+
+        toast.error(data.error ?? "Error al enviar el correo, revisa el formato.");
       }
     } catch (error) {
       return false;
@@ -171,6 +196,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     nuevaTareaPost,
     nuevoUsuarioPost,
     forgotPassword,
+    ObtenerTodasLasTareas,
   };
   return (
     <TareasContext.Provider value={value}>{children}</TareasContext.Provider>

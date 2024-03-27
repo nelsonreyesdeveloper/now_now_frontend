@@ -10,7 +10,7 @@ export function AuthLayout() {
       <div className="hidden bg-muted lg:block">
         <img
           className=" h-[50%] w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          src="src/assets/full-stack-developer-programacion.jpg"
+          src="/src/assets/full-stack-developer-programacion.jpg"
           alt=""
         />
       </div>

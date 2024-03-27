@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 export function Dashboard() {
-  generateTitle("Farmacia - Dashboard");
+  generateTitle("Tareas - Dashboard");
 
   const { token, logout, user, obteniendoUser } = useAuth();
   const navigate = useNavigate();
