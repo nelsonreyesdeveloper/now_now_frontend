@@ -1,27 +1,43 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useAuthContext from "@/hooks/useAuthContext";
 import { useTareasContext } from "@/hooks/useTareasContext";
-import React from "react";
 import { useForm } from "react-hook-form";
+import AsyncSelect from "react-select/async";
+import { useState } from "react";
+import CircleLoader from "react-spinners/CircleLoader";
 
 const NuevosUsuarios = () => {
   const { nuevoUsuarioPost } = useTareasContext();
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data: any) => {
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (data: any) => {
     const dataFormated = {
       email: data.email,
       name: data.name,
-      "tipo-rol": data.userType,
+      "tipo-rol": data.userType.value,
     };
-
-    nuevoUsuarioPost(dataFormated);
+    setLoading(true);
+    const response = await nuevoUsuarioPost(dataFormated);
+    if (response) {
+      setValue("email", "");
+      setValue("name", "");
+      setValue("userType", "");
+    }
+    setLoading(false);
   };
 
   return (
@@ -29,7 +45,9 @@ const NuevosUsuarios = () => {
       <CardHeader>
         <CardTitle> CREA UN NUEVO USUARIO </CardTitle>
 
-        <CardDescription >En esta seccion podras registrar usuarios nuevos </CardDescription>
+        <CardDescription>
+          En esta seccion podras registrar usuarios nuevos{" "}
+        </CardDescription>
 
         <div className="flex flex-col items-center ">
           <form onSubmit={handleSubmit(onSubmit)} className="w-full">
@@ -68,15 +86,18 @@ const NuevosUsuarios = () => {
                 <Label htmlFor="userType" className="block mb-2">
                   Tipo de usuario:
                 </Label>
-                <select
+                <AsyncSelect
                   id="userType"
                   {...register("userType", { required: true })}
-                  className="border border-gray-300 rounded px-4 py-2 w-full"
-                >
-                  <option value="">Seleccione un tipo de usuario</option>
-                  <option value="1">Super Usuario</option>
-                  <option value="2">Empleado</option>
-                </select>
+                  // className="border border-gray-300 rounded px-4 py-2 w-full"
+                  classNamePrefix="select"
+                  onChange={(e) => setValue("userType", e)}
+                  placeholder="Selecciona un tipo de usuario"
+                  defaultOptions={[
+                    { value: "1", label: "Super Usuario" },
+                    { value: "2", label: "Empleado" },
+                  ]}
+                ></AsyncSelect>
                 {errors.userType?.type === "required" && (
                   <p className="text-red-500">
                     El tipo de usuario es obligatorio
@@ -84,13 +105,22 @@ const NuevosUsuarios = () => {
                 )}
               </div>
             </div>
-
-            <button
-              type="submit"
-              className="bg-blue-500 text-white rounded px-4 py-2"
-            >
-              Crear usuario
-            </button>
+            <div className="flex gap-3">
+              <button
+                disabled={loading}
+                type="submit"
+                className="bg-blue-600 text-white  p-3 w-full  mt-5 lg:mt-0 lg:w-auto"
+              >
+                Crear usuario
+              </button>
+              <CircleLoader
+                color="#000"
+                loading={loading}
+                size={40}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              ></CircleLoader>
+            </div>
           </form>
         </div>
       </CardHeader>

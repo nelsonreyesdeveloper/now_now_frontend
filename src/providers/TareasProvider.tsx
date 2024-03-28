@@ -1,7 +1,7 @@
+import useAuthContext from "@/hooks/useAuthContext";
 import { User } from "@/types/types";
 import React, { createContext, useContext, useState } from "react";
 import { toast } from "react-toastify";
-
 // Importa las funciones necesarias para realizar las peticiones HTTP
 type formatedSelect = { value: number; label: string };
 interface TareasContextProps {
@@ -11,6 +11,8 @@ interface TareasContextProps {
   nuevaTareaPost: (data: any) => Promise<any>;
   nuevoUsuarioPost?: (data: any) => Promise<any>;
   forgotPassword?: (data: string) => Promise<any>;
+  ObtenerTodasLasTareas?: () => Promise<any>;
+  resetPassword?: (data: any) => Promise<any>;
 }
 
 export const TareasContext = createContext<TareasContextProps>({
@@ -20,13 +22,14 @@ export const TareasContext = createContext<TareasContextProps>({
   nuevaTareaPost: () => Promise.resolve([]),
   nuevoUsuarioPost: () => Promise.resolve([]),
   forgotPassword: () => Promise.resolve([]),
+  ObtenerTodasLasTareas: () => Promise.resolve([]),
+  resetPassword: () => Promise.resolve([]),
 });
 
 const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const tokenLocalStorage = localStorage.getItem("authToken");
-  const [token, setToken] = useState(tokenLocalStorage || ""); //eslint-disable-line
+  const { token } = useAuthContext();
 
   async function ObtenerTodosLosUsuarios(): Promise<[]> {
     try {
@@ -133,10 +136,33 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         toast.success(response2.message);
         return true;
       } else {
-        console.log("Error al crear el usuario");
+        const res = await response.json();
+        toast.error(res.message);
       }
     } catch (error) {
       return false;
+    }
+  };
+
+  const ObtenerTodasLasTareas = async () => {
+    console.log(token);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/tareas`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -158,9 +184,42 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         toast.success(response2.message);
         return true;
       } else {
-        console.log("Error al enviar el correo");
+        const data = await response.json();
+
+        toast.error(
+          data.error ?? "Error al enviar el correo, revisa el formato."
+        );
       }
     } catch (error) {
+      toast.error("Error al enviar el correo, revisa el formato.");
+      return false;
+    }
+  };
+
+  const resetPassword = async (data: any) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      if (response.ok) {
+        const response2 = await response.json();
+        toast.success(response2.message);
+        return true;
+      } else {
+        const data = await response.json();
+
+        toast.error(data.error ?? "Error al restablecer la contraña.");
+      }
+    } catch (error) {
+      toast.error("Error al restablecer la contraña.");
       return false;
     }
   };
@@ -171,6 +230,8 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     nuevaTareaPost,
     nuevoUsuarioPost,
     forgotPassword,
+    ObtenerTodasLasTareas,
+    resetPassword,
   };
   return (
     <TareasContext.Provider value={value}>{children}</TareasContext.Provider>
