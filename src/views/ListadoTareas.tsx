@@ -12,10 +12,11 @@ import { FaCommentDots, FaPaperclip } from "react-icons/fa";
 const ListadoTareas = () => {
   const { ObtenerTodasLasTareas } = useTareasContext();
   const [tareas, setTareas] = useState([]);
-  const [commentsVisible, setCommentsVisible] = useState({});
+  const [commentsVisible, setCommentsVisible] = useState([]);
   const { user } = useAuthContext();
   const getListadoTareas = async () => {
-    if (!user) return;
+    console.log(user);
+    if (!user || user.defaultPassword === 1) return;
     const resultado = await ObtenerTodasLasTareas();
     if (resultado) {
       setTareas(resultado.tareas.data);
@@ -24,12 +25,17 @@ const ListadoTareas = () => {
   useEffect(() => {
     getListadoTareas();
   }, []);
+
+  useEffect(() => {
+    console.log(commentsVisible);
+  }, [commentsVisible]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>LISTADO DE TAREAS</CardTitle>
         <CardDescription>
-          <p className="mt-3"> En esta seccion podras ver tus tareas.</p>
+          En esta seccion podras ver tus tareas.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -46,14 +52,31 @@ const ListadoTareas = () => {
                 </p>
 
                 <p className="font-bold">
-                  Estado:{" "}
-                  {tarea.id_estado === 1
-                    ? "Pendiente"
-                    : tarea.id_estado === 2
-                    ? "En Proceso"
-                    : tarea.id_estado === 3
-                    ? "Bloqueado"
-                    : "Completado"}
+                  Estado: {console.log(tarea.estado_id)}
+                  <span
+                  
+                    className={`
+                      ${
+                        tarea.estado_id === 1
+                          ? "bg-orange-500"
+                          : tarea.estado_id === 2
+                          ? "bg-purple-600"
+                          : tarea.estado_id === 3
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                      }
+
+                      text-black px-2 py-1 rounded
+                      `}
+                  >
+                    {tarea.estado_id === 1
+                      ? "Pendiente"
+                      : tarea.estado_id === 2
+                      ? "En Proceso"
+                      : tarea.estado_id === 3
+                      ? "Bloqueado"
+                      : "Completado"}
+                  </span>
                 </p>
               </div>
 
@@ -64,13 +87,17 @@ const ListadoTareas = () => {
                     className="text-blue-500 hover:text-blue-700 focus:outline-none"
                     onClick={() => {
                       console.log("Comments button clicked");
-
-                      if (commentsVisible === tarea.id) {
-                        setCommentsVisible(null);
+                      // console.log(tarea.?comentarios);
+                      if (commentsVisible.includes(tarea.id)) {
+                        setCommentsVisible(
+                          commentsVisible.filter((id) => id !== tarea.id)
+                        );
                         return;
                       }
-
-                      setCommentsVisible(tarea.comentarios[0].tarea_id);
+                      setCommentsVisible([
+                        ...commentsVisible.filter((id) => id !== tarea.id),
+                        tarea.id,
+                      ]);
                     }}
                   >
                     <FaCommentDots size={20} />
@@ -104,17 +131,23 @@ const ListadoTareas = () => {
               <p className="text-gray-700 mt-2">{tarea.descripcion}</p>
 
               {/* Conditionally render comments based on commentsVisible state */}
-              {commentsVisible === tarea.id && (
+              {commentsVisible.includes(tarea.id) && (
                 <div className="comments">
-                  <h4 className="font-semibold my-3 underline">Comentarios</h4>
-                  <ul>
-                    {tarea.comentarios.map((comment) => (
-                      <div className="flex gap-2 border-b border-gray-100 mb-3 p-2">
-                        <span className="font-bold">{comment.user.name}:</span>
-                        <li key={comment.id}>{comment.comentario}</li>
+                  {tarea.comentarios.length > 0 ? (
+                    tarea.comentarios.map((comentario) => (
+                      <div key={comentario.id} className="comment">
+                        <p className="font-bold">{comentario.user.name}</p>
+                        <p>{comentario.comentario}</p>
                       </div>
-                    ))}
-                  </ul>
+                    ))
+                  ) : (
+                    <p className="mt-4 text-gray-500 ">No hay comentarios</p>
+                  )}
+                  <input
+                    className="mt-2  w-[90%]  p-1 border-gray-300 border-2 border-solid rounded-md w-full"
+                    placeholder="Comenta algo"
+                    type="text"
+                  />
                 </div>
               )}
               {/* Implement comment section here (conditionally rendered based on state) */}

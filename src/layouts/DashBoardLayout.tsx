@@ -28,7 +28,11 @@ export function Dashboard() {
     if (!token) {
       navigate("/");
     } else {
-      obteniendoUser();
+      const response = obteniendoUser();
+
+      if (response === false) {
+        navigate("/");
+      }
     }
   }, [token]); //eslint-disable-line
 
@@ -37,15 +41,17 @@ export function Dashboard() {
       if (user.defaultPassword === 1) {
         navigate("/primer-ingreso");
       }
+      if (user.roles[0].name !== "super-admin" && user.defaultPassword === 0) {
+        navigate("/dashboard");
+      }
     }
-  }, [user]); //eslint-disable-line
+  }, [user]);
 
   const { pathname } = useLocation();
 
   const onClickLogout = async () => {
     logout();
   };
-  console.log(user);
   if (!user) {
     return null;
   }
@@ -137,14 +143,30 @@ export function Dashboard() {
                 AÑADIR NUEVOS USUARIOS
               </Link>
             )}
-
-            {/* 
-            <Link href="#">Integrations</Link>
-            <Link href="#">Support</Link>
-            <Link href="#">Organizations</Link>
-            <Link href="#">Advanced</Link> */}
           </nav>
-          <div className="grid gap-6">
+          <div className="grid gap-2">
+            <div className="flex justify-between mb-5">
+              <p className="font-bold text-xl uppercase">
+                Bienvenido:{" "}
+                <span className="capitalize font-normal">{user.name}</span>
+              </p>
+              <p className="text-gray-500 mt-2">
+                Tus permisos son:{" "}
+                <span className="capitalize font-normal">
+                  {user.roles.map((role) => {
+                    return (
+                      <span
+                        key={role.id}
+                        className="text-sm underline text-black font-normal capitalize"
+                      >
+                        {role.name}
+                      </span>
+                    );
+                  })}
+                </span>
+              </p>
+            </div>
+
             <Outlet></Outlet>
           </div>
         </div>

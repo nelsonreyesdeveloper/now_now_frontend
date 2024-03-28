@@ -3,6 +3,8 @@ import { FormDataReset } from "@/types/types";
 
 import { User } from "@/types/types";
 import { toast } from "react-toastify";
+
+import { useNavigate } from "react-router-dom";
 interface AuthContextProps {
   user: User;
   token: string | null;
@@ -13,6 +15,7 @@ interface AuthContextProps {
   logout: () => void;
   obteniendoUser: () => Promise<void>;
   resetPassword: (data: FormDataReset) => Promise<void>;
+  passwordDefault: boolean;
   // Add other auth-related functions as needed
 }
 
@@ -33,6 +36,7 @@ export const AuthContext = createContext<AuthContextProps>({
   token: null,
   obteniendoUser: async () => {},
   resetPassword: async () => {},
+  passwordDefault: false,
 });
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -42,6 +46,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const tokenLocalStorage = localStorage.getItem("authToken");
   const [token, setToken] = useState<string | null>(tokenLocalStorage);
+  const [passwordDefault, setPasswordDefault] = useState(false);
+
   // Fetch initial authentication state from local storage (optional)
   useEffect(() => {
     if (token) {
@@ -121,9 +127,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (response.ok) {
         obteniendoUser();
       } else {
+        const res = await response.json();
+
+        toast.error(res.error);
         console.error("Error al resetear la contraseña");
       }
     } catch (error) {
+      toast.error("Error al resetear la contraseña");
       console.error("Error al resetear la contraseña");
     }
   };
@@ -136,7 +146,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token || tokenLocalStorage}`,
             "Content-Type": "application/json",
             accept: "application/json",
           },
@@ -146,8 +156,14 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (response.ok) {
         const data = await response.json();
         setUser(data);
+
+        if (data.defaultPassword === 0) {
+          setPasswordDefault(!passwordDefault);
+        }
       } else {
-        console.error("Error al obtener el usuario");
+        localStorage.removeItem("authToken");
+
+        return false; 
       }
     } catch (error) {
       console.error("Error al obtener el usuario");
@@ -164,6 +180,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     token,
     obteniendoUser,
     resetPassword,
+    passwordDefault,
     // Add other functions for managing auth state
   };
 

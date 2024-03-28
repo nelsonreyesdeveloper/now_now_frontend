@@ -1,3 +1,4 @@
+import { useState, CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,26 +10,39 @@ import generateTitle from "@/utils/generateTitle";
 import { UserType } from "@/types/types";
 import { useSearchParams } from "react-router-dom";
 import useAuthContext from "@/hooks/useAuthContext";
+import PropagateLoader from "react-spinners/PropagateLoader";
+import { EyeIcon } from "lucide-react";
+import { BiHide } from "react-icons/bi";
+
+const override: CSSProperties = {
+  display: "block",
+  margin: "0 auto",
+};
+
 const Login = () => {
   generateTitle("Tareas - Login");
+
+  let [loading, setLoading] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams(); //eslint-disable-line
 
   const navigate = useNavigate();
 
-  const { token, setToken, login: iniciarSesion } = useAuthContext(); //eslint-disable-line
+  const [eye, setEye] = useState(false); //eslint-disable-line
+
+  const { token, setToken, login: iniciarSesion, user } = useAuthContext(); //eslint-disable-line
 
   useEffect(() => {
     if (searchParams.get("user") && searchParams.get("password")) {
-      localStorage.setItem(
-        "temporal",
-        JSON.stringify(searchParams.get("password"))
-      );
+      setValue("password", searchParams.get("password") as string);
       const data: UserType = {
         email: searchParams.get("user") as string,
         password: searchParams.get("password") as string,
       };
-      console.log(data);
+      if (token) {
+        navigate("/dashboard");
+        return;
+      }
       iniciarSesion(data);
     }
   }, []);
@@ -41,6 +55,7 @@ const Login = () => {
 
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm();
@@ -51,8 +66,11 @@ const Login = () => {
       alert("Todos los campos son obligatorios");
       return;
     }
+    setLoading(true);
 
-    iniciarSesion(data);
+    await iniciarSesion(data);
+
+    setLoading(false);
   };
   return (
     <div className="mx-auto grid w-[350px] gap-6">
@@ -66,7 +84,10 @@ const Login = () => {
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
-            {...register("email", { required: true })}
+            {...register("email", {
+              required: true,
+              pattern: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/i,
+            })}
             id="email"
             type="email"
             placeholder="m@example.com"
@@ -75,29 +96,61 @@ const Login = () => {
           {errors.email?.type === "required" && (
             <p className="text-red-500">El email es obligatorio</p>
           )}
+          {errors.email?.type === "pattern" && (
+            <p className="text-red-500">El email no es valido</p>
+          )}
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
             <Label htmlFor="password">Contraseña</Label>
           </div>
-          <Input
-            {...register("password", { required: true })}
-            placeholder="***********"
-            id="password"
-            type="password"
-            required
-          />
+
+          <div className="relative">
+            <Input
+              {...register("password", { required: true })}
+              placeholder="***********"
+              id="password"
+              {...(eye ? { type: "text" } : { type: "password" })}
+              required
+            />
+            {eye ? (
+              <BiHide
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEye(!eye)}
+              />
+            ) : (
+              <EyeIcon
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEye(!eye)}
+              />
+            )}
+          </div>
+
           {errors.password?.type === "required" && (
             <p className="text-red-500">La contraseña es obligatoria</p>
           )}
         </div>
+
+        {
+          <PropagateLoader
+            color="#36d7b7"
+            loading={loading}
+            cssOverride={override}
+            size={15}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+        }
         <Link
           to={"/forgot-password"}
-          className="ml-auto inline-block text-sm underline"
+          className="ml-auto block text-sm underline"
         >
           Recuperar cuenta?
         </Link>
         <Button
+          disabled={loading}
           onClick={handleSubmit(onSubmit)} //eslint-disable-line
           className="w-full bg-black text-white hover:bg-black"
         >

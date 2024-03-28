@@ -6,9 +6,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthContext from "@/hooks/useAuthContext";
 import { FormDataReset } from "@/types/types";
+import generateTitle from "@/utils/generateTitle";
+import PropagateLoader from "react-spinners/PropagateLoader";
+import { BiHide } from "react-icons/bi";
+import { EyeIcon } from "lucide-react";
 
 const ValidarContraseñaPrimerIngreso = () => {
+  generateTitle("Validar Contraseña");
   const {
+    setValue,
     register,
     handleSubmit,
     formState: { errors },
@@ -20,6 +26,10 @@ const ValidarContraseñaPrimerIngreso = () => {
     useAuthContext();
 
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [eye, setEye] = useState(false);
+  const [eyeDos, setEyeDos] = useState(false);
 
   useEffect(() => {
     obteniendoUser();
@@ -30,12 +40,13 @@ const ValidarContraseñaPrimerIngreso = () => {
       if (user.defaultPassword === 0) {
         navigate("/dashboard");
       }
-    } else if (!user && !token) {
+    }
+    if (!user && !token) {
       navigate("/");
     }
   }, [user]);
 
-  const onSubmit = (data: FormDataReset) => {
+  const onSubmit = async (data: FormDataReset) => {
     if (data.password !== data.password_confirmation) {
       setError(true);
       return;
@@ -49,8 +60,9 @@ const ValidarContraseñaPrimerIngreso = () => {
       password_confirmation: data.password_confirmation,
       password_temporal: data.password_temporal,
     };
-
-    resetPassword(dataFormated);
+    setLoading(true);
+    await resetPassword(dataFormated);
+    setLoading(false);
   };
 
   return (
@@ -82,16 +94,33 @@ const ValidarContraseñaPrimerIngreso = () => {
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
-            <Label htmlFor="password_reset">Contraseña</Label>
+            <Label htmlFor="password">Contraseña</Label>
           </div>
-          <Input
-            onKeyUp={() => setError(false)}
-            {...register("password", { required: true })}
-            placeholder="***********"
-            id="password_reset"
-            type="password"
-            required
-          />
+
+          <div className="relative">
+            <Input
+              onKeyUp={() => setError(false)}
+              {...register("password", { required: true })}
+              placeholder="***********"
+              id="password"
+              {...(eye ? { type: "text" } : { type: "password" })}
+              required
+            />
+            {eye ? (
+              <BiHide
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEye(!eye)}
+              />
+            ) : (
+              <EyeIcon
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEye(!eye)}
+              />
+            )}
+          </div>
+
           {errors.password?.type === "required" && (
             <p className="text-red-500">La contraseña es obligatoria</p>
           )}
@@ -100,17 +129,34 @@ const ValidarContraseñaPrimerIngreso = () => {
           <div className="flex items-center">
             <Label htmlFor="password_confirmation">Confirmar contraseña</Label>
           </div>
-          <Input
-            onKeyUp={() => setError(false)}
-            {...register("password_confirmation", {
-              required: true,
-              minLength: 8,
-            })}
-            placeholder="***********"
-            id="password_confirmation"
-            type="password"
-            required
-          />
+          <div className="relative">
+            <Input
+              onKeyUp={() => setError(false)}
+              {...register("password_confirmation", {
+                required: true,
+                minLength: 8,
+              })}
+              placeholder="***********"
+              id="password_confirmation"
+              {...(eyeDos ? { type: "text" } : { type: "password" })}
+              required
+            />
+
+            {eyeDos ? (
+              <BiHide
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEyeDos(!eyeDos)}
+              />
+            ) : (
+              <EyeIcon
+                className="absolute top-2 right-2 cursor-pointer"
+                size={20}
+                onClick={() => setEyeDos(!eyeDos)}
+              />
+            )}
+          </div>
+
           {errors.password_confirmation?.type === "required" && (
             <p className="text-red-500">
               Las contraseñas de confirmacion es obligatoria
@@ -125,6 +171,19 @@ const ValidarContraseñaPrimerIngreso = () => {
             <p className="text-red-500">Las contraseñas no coinciden</p>
           )}
         </div>
+        {
+          <PropagateLoader
+            color="#36d7b7"
+            loading={loading}
+            cssOverride={{
+              display: "block",
+              margin: "0 auto",
+            }}
+            size={15}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          ></PropagateLoader>
+        }
         <Button
           onClick={() => logout()}
           className="ml-auto inline-block text-sm underline"
@@ -132,6 +191,7 @@ const ValidarContraseñaPrimerIngreso = () => {
           Cerrar Sesion?
         </Button>
         <Button
+          disabled={loading}
           onClick={handleSubmit(onSubmit)}
           className="w-full bg-black text-white hover:bg-black"
         >
