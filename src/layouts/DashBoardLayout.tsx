@@ -16,9 +16,10 @@ import { useEffect } from "react";
 import generateTitle from "@/utils/generateTitle";
 import useAuth from "@/hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 export function Dashboard() {
-  generateTitle("Farmacia - Dashboard");
+  generateTitle("Tareas - Dashboard");
 
   const { token, logout, user, obteniendoUser } = useAuth();
   const navigate = useNavigate();
@@ -27,7 +28,11 @@ export function Dashboard() {
     if (!token) {
       navigate("/");
     } else {
-      obteniendoUser();
+      const response = obteniendoUser();
+
+      if (response === false) {
+        navigate("/");
+      }
     }
   }, [token]); //eslint-disable-line
 
@@ -36,15 +41,17 @@ export function Dashboard() {
       if (user.defaultPassword === 1) {
         navigate("/primer-ingreso");
       }
+      if (user.roles[0].name !== "super-admin" && user.defaultPassword === 0) {
+        navigate("/dashboard");
+      }
     }
-  }, [user]); //eslint-disable-line
+  }, [user]);
 
   const { pathname } = useLocation();
 
   const onClickLogout = async () => {
     logout();
   };
-  console.log(user);
   if (!user) {
     return null;
   }
@@ -126,18 +133,45 @@ export function Dashboard() {
                 AÑADIR NUEVAS TAREAS
               </Link>
             )}
-
-            {/* 
-            <Link href="#">Integrations</Link>
-            <Link href="#">Support</Link>
-            <Link href="#">Organizations</Link>
-            <Link href="#">Advanced</Link> */}
+            {user.roles[0]["name"] === "super-admin" && (
+              <Link
+                className={
+                  pathname === "/dashboard/nuevos-usuarios" ? "font-bold" : ""
+                }
+                to={"/dashboard/nuevos-usuarios"}
+              >
+                AÑADIR NUEVOS USUARIOS
+              </Link>
+            )}
           </nav>
-          <div className="grid gap-6">
+          <div className="grid gap-2">
+            <div className="flex justify-between mb-5">
+              <p className="font-bold text-xl uppercase">
+                Bienvenido:{" "}
+                <span className="capitalize font-normal">{user.name}</span>
+              </p>
+              <p className="text-gray-500 mt-2">
+                Tus permisos son:{" "}
+                <span className="capitalize font-normal">
+                  {user.roles.map((role) => {
+                    return (
+                      <span
+                        key={role.id}
+                        className="text-sm underline text-black font-normal capitalize"
+                      >
+                        {role.name}
+                      </span>
+                    );
+                  })}
+                </span>
+              </p>
+            </div>
+
             <Outlet></Outlet>
           </div>
         </div>
       </main>
+      <ToastContainer></ToastContainer>
     </div>
   );
 }

@@ -1,50 +1,50 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@radix-ui/react-label";
+import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useAuthContext from "@/hooks/useAuthContext";
 import { FormDataReset } from "@/types/types";
+import { CSSProperties, useEffect, useState } from "react";
+import useAuthContext from "@/hooks/useAuthContext";
 import generateTitle from "@/utils/generateTitle";
+import { useSearchParams } from "react-router-dom";
 import PropagateLoader from "react-spinners/PropagateLoader";
-import { BiHide } from "react-icons/bi";
+import { useTareasContext } from "@/hooks/useTareasContext";
+import { useNavigate } from "react-router-dom";
 import { EyeIcon } from "lucide-react";
+import { BiHide } from "react-icons/bi";
+const RecuperarPasswordToken = () => {
+  generateTitle("Tareas - Recuperar Password");
 
-const ValidarContraseñaPrimerIngreso = () => {
-  generateTitle("Validar Contraseña");
-  const {
-    setValue,
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const override: CSSProperties = {
+    display: "block",
+    margin: "0 auto",
+  };
   const navigate = useNavigate();
-
-  const { logout, user, resetPassword, token, obteniendoUser } =
-    useAuthContext();
-
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
 
+  const { logout, user,token } = useAuthContext();
+  const { resetPassword } = useTareasContext();
   const [eye, setEye] = useState(false);
   const [eyeDos, setEyeDos] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    obteniendoUser();
+    if (searchParams.get("token") === null) {
+      logout();
+    }
+
+    if(token){
+      navigate('/dashboard')
+    }
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      if (user.defaultPassword === 0) {
-        navigate("/dashboard");
-      }
-    }
-    if (!user && !token) {
-      navigate("/");
-    }
-  }, [user]);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
   const onSubmit = async (data: FormDataReset) => {
     if (data.password !== data.password_confirmation) {
@@ -55,41 +55,51 @@ const ValidarContraseñaPrimerIngreso = () => {
     setError(false);
 
     const dataFormated = {
-      email: user.email,
+      email: data.email,
       password: data.password,
       password_confirmation: data.password_confirmation,
-      password_temporal: data.password_temporal,
+      token: searchParams.get("token"),
     };
+
     setLoading(true);
-    await resetPassword(dataFormated);
+    const response = await resetPassword(dataFormated);
+    if (response) {
+      navigate("/");
+    }
     setLoading(false);
   };
-
   return (
     <div className="mx-auto grid w-[350px] gap-6">
       <div className="grid gap-2 text-center">
-        <h1 className="text-3xl font-bold">Hola! {user?.name}</h1>
+        <h1 className="text-3xl font-bold">
+          Hola debes Ingresar una nueva contraseña para restablecer tu cuenta
+        </h1>
         <p className="text-balance text-muted-foreground">
-          Estas autenticado sin embargo debes establecer tu contraseña, ya que
-          la actual es por defecto.
+          Por favor ingresa tu nueva contraseña
         </p>
       </div>
       <div className="grid gap-4">
         <div className="grid gap-2">
           <div className="flex items-center">
-            <Label htmlFor="password_temporal">Contraseña temporal</Label>
+            <Label htmlFor="email">Email</Label>
           </div>
           <Input
             onKeyUp={() => setError(false)}
-            {...register("password_temporal", { required: true })}
-            id="password_temporal"
-            type="text"
+            {...register("email", {
+              required: true,
+              pattern: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/i,
+            })}
+            value={watch("email")}
+            placeholder="Tu email de registro"
+            id="email"
+            type="email"
             required
           />
-          {errors.password_temporal?.type === "required" && (
-            <p className="text-red-500">
-              La contraseña temporal es obligatoria
-            </p>
+          {errors.email?.type === "required" && (
+            <p className="text-red-500">El email es obligatorio</p>
+          )}
+          {errors.email?.type === "pattern" && (
+            <p className="text-red-500">El email no es valido</p>
           )}
         </div>
         <div className="grid gap-2">
@@ -175,21 +185,15 @@ const ValidarContraseñaPrimerIngreso = () => {
           <PropagateLoader
             color="#36d7b7"
             loading={loading}
-            cssOverride={{
-              display: "block",
-              margin: "0 auto",
-            }}
+            cssOverride={override}
             size={15}
             aria-label="Loading Spinner"
             data-testid="loader"
-          ></PropagateLoader>
+          />
         }
-        <Button
-          onClick={() => logout()}
-          className="ml-auto inline-block text-sm underline"
-        >
-          Cerrar Sesion?
-        </Button>
+        <Link to={"/"} className="ml-auto inline-block text-sm underline">
+          Regresar a la pagina de inicio?
+        </Link>
         <Button
           disabled={loading}
           onClick={handleSubmit(onSubmit)}
@@ -202,4 +206,4 @@ const ValidarContraseñaPrimerIngreso = () => {
   );
 };
 
-export default ValidarContraseñaPrimerIngreso;
+export default RecuperarPasswordToken;

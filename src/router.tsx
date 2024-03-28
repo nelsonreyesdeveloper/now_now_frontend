@@ -6,6 +6,8 @@ import { Dashboard } from "./layouts/DashBoardLayout";
 import ListadoTareas from "./views/ListadoTareas";
 import NuevaTarea from "./views/NuevaTarea";
 import ValidarContraseñaPrimerIngreso from "./views/ValidarContraseñaPrimerIngreso";
+import NuevosUsuarios from "./views/NuevosUsuarios";
+import RecuperarPasswordToken from "./views/RecuperarPasswordToken";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +28,10 @@ const router = createBrowserRouter([
           <ValidarContraseñaPrimerIngreso></ValidarContraseñaPrimerIngreso>
         ),
       },
+      {
+        path: "password-reset",
+        element: <RecuperarPasswordToken></RecuperarPasswordToken>,
+      },
     ],
   },
   {
@@ -43,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "nueva-tarea",
         element: <NuevaTarea></NuevaTarea>,
+      },
+      {
+        path: "nuevos-usuarios",
+        element: <NuevosUsuarios></NuevosUsuarios>,
       },
     ],
   },
