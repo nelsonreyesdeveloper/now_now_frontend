@@ -40,6 +40,7 @@ const NuevaTarea = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
+  const [nuevoReporte, setNuevoReporte] = useState(false);
 
   const { user } = useAuthContext();
   const {
@@ -50,11 +51,38 @@ const NuevaTarea = () => {
     changueStatusTarea,
     deleteTarea,
     editarTareaPath,
+    generarReporte,
   } = useTareasContext();
   const { show } = useContextMenu({});
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+  };
+
+  const generarNuevoReporte = async () => {
+    const data = {
+      fecha_inicio: watch("fechaInicio"),
+      fecha_fin: watch("fechaFinal"),
+    };
+
+    if (data.fecha_inicio == "" || data.fecha_fin == "") {
+      toast.error("Debes seleccionar una fecha de inicio y una fecha final");
+      return;
+    }
+
+    Swal.fire({
+      title: "Generando Reporte...",
+      text: "Por favor, espere...",
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const response = await generarReporte(data);
+
+    
+    Swal.close();
   };
 
   const handleDeleteTarea = async (tarea) => {
@@ -224,6 +252,52 @@ const NuevaTarea = () => {
             >
               Borrar Filtro
             </button>
+          </div>
+        </div>
+        <div className="mt-2 flex flex-col lg:flex-row lg:items-center lg:justify-between">
+          <button
+            onClick={() => {
+              setNuevoReporte(!nuevoReporte);
+            }}
+            className="bg-indigo-600 text-white rounded px-2 py-1"
+          >
+            {nuevoReporte == false
+              ? "Ver filtros de nuevo reporte"
+              : "Cerrar filtros de nuevo reporte"}
+          </button>
+
+          <div>
+            {
+              nuevoReporte && (
+                <div className="flex flex-col lg:items-center lg:justify-center">
+                  <div className="flex gap-3 mt-4 lg:mt-0">
+                    <div className="flex flex-col w-full">
+                      <label htmlFor="">Fecha de Inicio</label>
+                      <input
+                        {...register("fechaInicio")}
+                        className="bg-white border border-black "
+                        type="date"
+                      ></input>
+                    </div>
+
+                    <div className="flex flex-col w-full">
+                      <label htmlFor="">Fecha Final</label>
+                      <input
+                        {...register("fechaFinal")}
+                        className="bg-white border border-black "
+                        type="date"
+                      ></input>
+                    </div>
+                  </div>
+                  <button
+                    onClick={generarNuevoReporte}
+                    className="bg-blue-700 text-white roundend px-2 py-1 mt-3"
+                  >
+                    Generar Reporte
+                  </button>
+                </div>
+              ) // eslint-disable-line
+            }
           </div>
         </div>
       </CardHeader>
