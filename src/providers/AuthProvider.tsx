@@ -59,7 +59,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const logout = () => {
-    console.log(token);
     try {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/logout`, {
         method: "POST",
@@ -103,7 +102,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error("Login error:", error);
-      // Handle login errors gracefully (display error message, etc.)
+      toast.error("Error en el servidor, intente más tarde");
     }
   };
 
@@ -133,8 +132,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Error al resetear la contraseña");
       }
     } catch (error) {
-      toast.error("Error al resetear la contraseña");
-      console.error("Error al resetear la contraseña");
+      toast.error("Error en el servidor, intente más tarde");
     }
   };
 
@@ -163,10 +161,10 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         localStorage.removeItem("authToken");
 
-        return false; 
+        return false;
       }
     } catch (error) {
-      console.error("Error al obtener el usuario");
+      toast.error("Error en el servidor, intente más tarde");
     }
   };
 
