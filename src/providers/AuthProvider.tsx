@@ -161,6 +161,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         localStorage.removeItem("authToken");
 
+        window.location.href = "/";
+
         return false;
       }
     } catch (error) {
