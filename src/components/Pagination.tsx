@@ -1,6 +1,6 @@
 const Pagination = ({ currentPage, totalPages, handlePageChange }) => {
   return (
-    <div className="grid grid-cols-3 lg:gap-4 lg:w-5/12 mt-5">
+    <div className="grid grid-cols-3  lg:gap-4 lg:w-5/12 mt-5">
       <button
         disabled={currentPage === 1}
         onClick={() => {
@@ -16,20 +16,37 @@ const Pagination = ({ currentPage, totalPages, handlePageChange }) => {
       </button>
 
       <div className="flex justify-around">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            className={`bg-blue-600 text-white p-2 rounded-sm ${
-              currentPage === i + 1 ? " bg-blue-900 border-white" : ""
-            }`}
-            onClick={() => {
-              console.log(i + 1)
-              handlePageChange(i + 1);
-            }}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {Array.from({ length: totalPages }, (_, i) =>
+          totalPages > 3 ? (
+            i === 0 || i === totalPages - 1 || i === currentPage - 1 ? (
+              <button
+                key={i}
+                onClick={() => handlePageChange(i + 1)}
+                className={`${
+                  currentPage === i + 1
+                    ? "bg-blue-600 text-white p-2 rounded-sm"
+                    : "bg-blue-200 text-blue-600 p-2 rounded-sm"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ) : i === currentPage - 2 || i === currentPage ? (
+              <span key={i}>...</span>
+            ) : null
+          ) : (
+            <button
+              key={i}
+              onClick={() => handlePageChange(i + 1)}
+              className={`${
+                currentPage === i + 1
+                  ? "bg-blue-600 text-white p-2 rounded-sm"
+                  : "bg-blue-200 text-blue-600 p-2 rounded-sm"
+              }`}
+            >
+              {i + 1}
+            </button>
+          )
+        )}
       </div>
 
       <button
