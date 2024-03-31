@@ -2,6 +2,8 @@ import useAuthContext from "@/hooks/useAuthContext";
 import { User } from "@/types/types";
 import React, { createContext, useContext, useState } from "react";
 import { toast } from "react-toastify";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 // Importa las funciones necesarias para realizar las peticiones HTTP
 type formatedSelect = { value: number; label: string };
 interface TareasContextProps {
@@ -21,6 +23,7 @@ interface TareasContextProps {
   downloadFile?: (archivo: any, enlace: string) => Promise<any>;
   borrarArchivo?: (archivoId: number, TareaId: number) => Promise<any>;
   uploadFile?: (data: any) => Promise<any>;
+  generarReporte?: (data: any) => Promise<any>;
 }
 
 export const TareasContext = createContext<TareasContextProps>({
@@ -40,12 +43,18 @@ export const TareasContext = createContext<TareasContextProps>({
   downloadFile: () => Promise.resolve([]),
   borrarArchivo: () => Promise.resolve([]),
   uploadFile: () => Promise.resolve([]),
+  generarReporte: () => Promise.resolve([]),
 });
 
 const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { token } = useAuthContext();
+  const doc = new jsPDF({
+    orientation: "landscape", // Orientación vertical
+    unit: "in", // Unidad de medida en pulgadas
+    format: "letter", // Tamaño de hoja oficio (similar a A4)
+  });
 
   async function ObtenerTodosLosUsuarios(): Promise<[]> {
     try {
@@ -436,6 +445,71 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       return false;
     }
   };
+
+  const generarReporte = async (data: any) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/generar-reporte`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      if (response.ok) {
+        const response2 = await response.json();
+
+        toast.success(response2.message);
+
+        const tableData = response2.reporte.tareas.map((tarea) => {
+          return [
+            tarea.titulo,
+            tarea.descripcion,
+            tarea.estado,
+            tarea.tiempo,
+            tarea.usuario,
+          ];
+        });
+
+        const head = ["Título", "Descripción", "Estado", "Tiempo", "Usuario"];
+        autoTable(doc, {
+          headStyles: {
+            halign: "center",
+            fontSize: 13,
+            fillColor: [0, 0, 0],
+          },
+          pageBreak: "auto",
+          bodyStyles: {
+            halign: "center",
+            fontSize: 10,
+            fillColor: [255, 255, 255],
+            lineColor: [0, 0, 0],
+            valign: "middle",
+          },
+          head: [head],
+          body: tableData,
+        });
+
+        doc.save(
+          `reporte-${response2.reporte.fecha_inicio}-a-${response2.reporte.fecha_fin}.pdf`
+        );
+
+        return true;
+      } else {
+        const data = await response.json();
+
+        toast.error(data.error ?? "Error al generar el reporte");
+      }
+    } catch (error) {
+      toast.error("Error al generar el reporte");
+      return false;
+    }
+  };
+
   const resetPassword = async (data: any) => {
     try {
       const response = await fetch(
@@ -480,6 +554,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     downloadFile,
     borrarArchivo,
     uploadFile,
+    generarReporte,
   };
   return (
     <TareasContext.Provider value={value}>{children}</TareasContext.Provider>
