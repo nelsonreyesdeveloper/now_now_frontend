@@ -6,20 +6,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTareasContext } from "@/hooks/useTareasContext";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, ChangeEvent, BaseSyntheticEvent } from "react";
 import useAuthContext from "@/hooks/useAuthContext";
 import { FaCommentDots, FaPaperclip } from "react-icons/fa";
 import { Menu, Item, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
 import { toast } from "react-toastify";
-import { estadosTareas } from "../data/estados";
-import { Check, DeleteIcon, Send, Upload, UploadCloud } from "lucide-react";
+import { estadosTareas } from "@/data/estados";
+import { Check, DeleteIcon, Send, UploadCloud } from "lucide-react";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Input } from "@/components/ui/input";
-import { set, useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import Pagination from "@/components/Pagination";
 import validateFileType from "@/utils/validateExtension";
+import { comentarioDelete, tarea } from "@/types/types";
+
+type comentario = {
+  tarea_id: number;
+  comentario: string;
+};
 const ListadoTareas = () => {
   const {
     ObtenerTodasLasTareas,
@@ -31,38 +37,32 @@ const ListadoTareas = () => {
     uploadFile,
   } = useTareasContext();
   const [tareas, setTareas] = useState([]);
-  const [commentsVisible, setCommentsVisible] = useState([]);
+  const [commentsVisible, setCommentsVisible] = useState<number[]>([]);
   const { user } = useAuthContext();
 
   const [comentarioDelete, setComentarioDelete] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
-  const [selectedFile, setSelectedFile] = useState([]);
+  const [selectedFile, setSelectedFile] = useState<number[]>([]);
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
 
   const [loading, setLoading] = useState(false);
 
   const { show } = useContextMenu({});
 
-  const handleFileChange = async (e) => {
-    const response2 = validateFileType(e.target.files[0]);
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] as Blob;
+    const response2 = validateFileType(file);
     if (!response2) {
       /* borrar el archivo del input */
 
-      e.target.value = null;
+      e.target.value = "";
       return toast.error("Tipo de archivo no permitido");
     }
 
@@ -70,7 +70,7 @@ const ListadoTareas = () => {
 
     const tarea_id = e.target.id.split("-")[2];
 
-    data.append("archivo", e.target.files[0]);
+    data.append("archivo", file as Blob);
     data.append("tarea_id", tarea_id);
 
     Swal.fire({
@@ -82,15 +82,16 @@ const ListadoTareas = () => {
         Swal.showLoading();
       },
     });
+
     const response = await uploadFile(data);
     if (response) {
-      getListadoTareas();
-      e.target.value = null;
+      getListadoTareas("");
+      e.target.value = "";
     }
     Swal.close();
   };
 
-  const handleDeleteArchivo = async (archivo_id, tarea_id) => {
+  const handleDeleteArchivo = async (archivo_id: number, tarea_id: number) => {
     try {
       Swal.fire({
         title: "Cargando...",
@@ -104,7 +105,7 @@ const ListadoTareas = () => {
       const response = await borrarArchivo(archivo_id, tarea_id);
 
       if (response) {
-        getListadoTareas();
+        getListadoTareas("");
       }
       Swal.close();
     } catch (error) {
@@ -112,7 +113,11 @@ const ListadoTareas = () => {
     }
   };
 
-  function handleContextMenu(event, tareaId, estado) {
+  function handleContextMenu(
+    event: MouseEvent<HTMLElement, MouseEvent>,
+    tareaId: number,
+    estado: number
+  ) {
     show({
       id: tareaId,
       event,
@@ -121,7 +126,7 @@ const ListadoTareas = () => {
     });
   }
 
-  const handleItemClick = async ({ id, event, props }, estado) => {
+  const handleItemClick = async ({ id, event, props }, estado: number) => {
     const data = {
       tarea_id: props.tarea,
       estado_id: estado,
@@ -139,14 +144,17 @@ const ListadoTareas = () => {
     const response = await changueStatusTarea(data);
 
     if (response) {
-      getListadoTareas();
+      getListadoTareas("");
     }
     Swal.close();
   };
 
-  const handleDeleteComment = async (comentario_id, tarea_id) => {
+  const handleDeleteComment = async (
+    comentario_id: number,
+    tarea_id: number
+  ) => {
     if (comentarioDelete) return;
-    const data = {
+    const data: comentarioDelete = {
       comentario_id,
       tarea_id,
     };
@@ -164,12 +172,12 @@ const ListadoTareas = () => {
     const response = await comentariosDeleteTarea(data);
 
     if (response) {
-      getListadoTareas();
+      getListadoTareas("");
     }
     Swal.close();
     setComentarioDelete(false);
   };
-  const getListadoTareas = async (titulo) => {
+  const getListadoTareas = async (titulo: string) => {
     if (!user || user.defaultPassword === 1) return;
     const resultado = await ObtenerTodasLasTareas(currentPage, titulo);
     if (resultado) {
@@ -180,14 +188,14 @@ const ListadoTareas = () => {
     setLoading(false);
   };
 
-  const enviarComentarios = async (data, id) => {
+  const enviarComentarios = async (data: FieldValues, id: number) => {
     const recortarComentario = data[`comentario-${id}`].trim();
-    const data2 = {
+    const data2: comentario = {
       tarea_id: id,
       comentario: recortarComentario,
     };
-
-    if (data2.comentario === "" || data2.tarea_id === "") return;
+    console.log(data2);
+    if (data2.comentario === "" || !data2.tarea_id) return;
 
     Swal.fire({
       title: "Cargando...",
@@ -200,7 +208,7 @@ const ListadoTareas = () => {
     });
     const response = await enviarComentariosTarea(data2);
     if (response) {
-      getListadoTareas();
+      getListadoTareas("");
       setValue(`comentario-${id}`, "");
     }
     Swal.close();
@@ -208,7 +216,7 @@ const ListadoTareas = () => {
 
   useEffect(() => {
     setLoading(true);
-    getListadoTareas();
+    getListadoTareas("");
   }, [currentPage]);
 
   return (
@@ -229,7 +237,7 @@ const ListadoTareas = () => {
                 getListadoTareas(e.target.value);
               } else {
                 setLoading(true);
-                getListadoTareas();
+                getListadoTareas("");
               }
             }}
             value={watch("search2")}
@@ -240,7 +248,7 @@ const ListadoTareas = () => {
             onClick={() => {
               setLoading(true);
               setValue("search2", "");
-              getListadoTareas();
+              getListadoTareas("");
             }}
             className="underline"
           >
@@ -256,7 +264,7 @@ const ListadoTareas = () => {
             </div>
           ) : tareas.length > 0 ? (
             <div>
-              {tareas.map((tarea) => (
+              {tareas.map((tarea: tarea) => (
                 <div
                   key={tarea.id}
                   data-tarea-id={tarea.id}
@@ -340,9 +348,10 @@ const ListadoTareas = () => {
                         className="text-blue-500 hover:text-blue-700 focus:outline-none"
                         onClick={() => {
                           if (commentsVisible.includes(tarea.id)) {
-                            setCommentsVisible(
-                              commentsVisible.filter((id) => id !== tarea.id)
+                            const buscando = commentsVisible.filter(
+                              (id) => id !== tarea.id
                             );
+                            setCommentsVisible(buscando);
                             return;
                           }
                           setCommentsVisible([
@@ -363,7 +372,6 @@ const ListadoTareas = () => {
                       <label
                         className="text-blue-500"
                         onClick={(e) => {
-                          console.log(selectedFile, tarea.id);
                           if (selectedFile.includes(tarea.id)) {
                             setSelectedFile(
                               selectedFile.filter((id) => id !== tarea.id)
@@ -460,8 +468,11 @@ const ListadoTareas = () => {
                             />
                             <Send
                               size={20}
-                              onClick={() => {
-                                handleSubmit(enviarComentarios)(tarea.id);
+                              onClick={(e) => {
+                                e.preventDefault(); // Prevent default form submission
+                                handleSubmit((e) => {
+                                  enviarComentarios(e, tarea.id);
+                                })(e); // Pass the event object to handleSubmit
                               }}
                               className="absolute z-50 right-4 top-3 text-blue-600 cursor-pointer"
                             />
@@ -555,7 +566,7 @@ const ListadoTareas = () => {
                                   className="text-blue-500"
                                   size={20}
                                 />
-                               Subir Archivo
+                                Subir Archivo
                               </span>
                               <input
                                 id={`file-upload-${tarea.id}`}

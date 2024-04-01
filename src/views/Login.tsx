@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useEffect } from "react";
 import generateTitle from "@/utils/generateTitle";
 
@@ -22,15 +22,15 @@ const override: CSSProperties = {
 const Login = () => {
   generateTitle("Tareas - Login");
 
-  let [loading, setLoading] = useState(false);
+  let [loading, setLoading] = useState(false); //eslint-disable-line
 
-  const [searchParams, setSearchParams] = useSearchParams(); //eslint-disable-line
+  const [searchParams] = useSearchParams(); //eslint-disable-line
 
   const navigate = useNavigate();
 
   const [eye, setEye] = useState(false); //eslint-disable-line
 
-  const { token, setToken, login: iniciarSesion, user } = useAuthContext(); //eslint-disable-line
+  const { token, login: iniciarSesion } = useAuthContext(); //eslint-disable-line
 
   useEffect(() => {
     if (searchParams.get("user") && searchParams.get("password")) {
@@ -60,7 +60,7 @@ const Login = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async (data: UserType) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     /* Validar los datos */
     if (!data.email || !data.password) {
       alert("Todos los campos son obligatorios");
@@ -68,7 +68,12 @@ const Login = () => {
     }
     setLoading(true);
 
-    await iniciarSesion(data);
+    const data2: UserType = {
+      email: data.email,
+      password: data.password,
+    };
+
+    await iniciarSesion(data2);
 
     setLoading(false);
   };

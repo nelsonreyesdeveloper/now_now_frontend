@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { FormDataReset } from "@/types/types";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { resetPaswordData } from "@/types/types";
 import { CSSProperties, useEffect, useState } from "react";
 import useAuthContext from "@/hooks/useAuthContext";
 import generateTitle from "@/utils/generateTitle";
@@ -16,7 +16,7 @@ import { BiHide } from "react-icons/bi";
 const RecuperarPasswordToken = () => {
   generateTitle("Tareas - Recuperar Password");
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const override: CSSProperties = {
     display: "block",
     margin: "0 auto",
@@ -24,7 +24,7 @@ const RecuperarPasswordToken = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(false);
 
-  const { logout, user,token } = useAuthContext();
+  const { logout, token } = useAuthContext();
   const { resetPassword } = useTareasContext();
   const [eye, setEye] = useState(false);
   const [eyeDos, setEyeDos] = useState(false);
@@ -35,8 +35,8 @@ const RecuperarPasswordToken = () => {
       logout();
     }
 
-    if(token){
-      navigate('/dashboard')
+    if (token) {
+      navigate("/dashboard");
     }
   }, []);
   const {
@@ -46,7 +46,7 @@ const RecuperarPasswordToken = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async (data: FormDataReset) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (data.password !== data.password_confirmation) {
       setError(true);
       return;
@@ -54,11 +54,11 @@ const RecuperarPasswordToken = () => {
 
     setError(false);
 
-    const dataFormated = {
+    const dataFormated: resetPaswordData = {
       email: data.email,
       password: data.password,
       password_confirmation: data.password_confirmation,
-      token: searchParams.get("token"),
+      token: searchParams.get("token") ?? "",
     };
 
     setLoading(true);

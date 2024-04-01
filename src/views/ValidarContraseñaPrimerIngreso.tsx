@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
-import { useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthContext from "@/hooks/useAuthContext";
@@ -14,7 +14,6 @@ import { EyeIcon } from "lucide-react";
 const ValidarContraseñaPrimerIngreso = () => {
   generateTitle("Validar Contraseña");
   const {
-    setValue,
     register,
     handleSubmit,
     formState: { errors },
@@ -46,7 +45,7 @@ const ValidarContraseñaPrimerIngreso = () => {
     }
   }, [user]);
 
-  const onSubmit = async (data: FormDataReset) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (data.password !== data.password_confirmation) {
       setError(true);
       return;
@@ -54,7 +53,7 @@ const ValidarContraseñaPrimerIngreso = () => {
 
     setError(false);
 
-    const dataFormated = {
+    const dataFormated: FormDataReset = {
       email: user.email,
       password: data.password,
       password_confirmation: data.password_confirmation,

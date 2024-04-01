@@ -4,16 +4,15 @@ import { FormDataReset } from "@/types/types";
 import { User } from "@/types/types";
 import { toast } from "react-toastify";
 
-import { useNavigate } from "react-router-dom";
 interface AuthContextProps {
   user: User;
   token: string | null;
   isAuthenticated: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: User) => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
-  obteniendoUser: () => Promise<void>;
+  obteniendoUser: () => Promise<boolean>;
   resetPassword: (data: FormDataReset) => Promise<void>;
   passwordDefault: boolean;
   // Add other auth-related functions as needed
@@ -34,7 +33,9 @@ export const AuthContext = createContext<AuthContextProps>({
   login: async () => {},
   logout: () => {},
   token: null,
-  obteniendoUser: async () => {},
+  obteniendoUser: async () => {
+    return false;
+  },
   resetPassword: async () => {},
   passwordDefault: false,
 });
@@ -42,7 +43,7 @@ export const AuthContext = createContext<AuthContextProps>({
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>({} as User);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const tokenLocalStorage = localStorage.getItem("authToken");
   const [token, setToken] = useState<string | null>(tokenLocalStorage);
@@ -72,7 +73,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Logout error:", error);
     }
 
-    setUser(null);
+    setUser({} as User);
     setToken(null);
     setIsAuthenticated(false);
     localStorage.removeItem("authToken");
@@ -136,7 +137,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const obteniendoUser = async () => {
+  const obteniendoUser = async (): Promise<boolean> => {
     /* ir a api/user y obtener el user */
     try {
       const response = await fetch(
@@ -158,15 +159,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (data.defaultPassword === 0) {
           setPasswordDefault(!passwordDefault);
         }
+
+        return true;
       } else {
         localStorage.removeItem("authToken");
-
-        window.location.href = "/";
 
         return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
+      return false;
     }
   };
 
@@ -174,10 +176,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value: AuthContextProps = {
     user,
+    token,
     isAuthenticated,
+    setUser,
+    setIsAuthenticated,
     login,
     logout,
-    token,
     obteniendoUser,
     resetPassword,
     passwordDefault,

@@ -1,9 +1,18 @@
 import useAuthContext from "@/hooks/useAuthContext";
-import { User } from "@/types/types";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext } from "react";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  comentarioDelete,
+  editarTareaPostSinObjeto,
+  generarReporte,
+  generarReportePDF,
+  nuevoUsuarioPostData,
+  resetPaswordData,
+  tareaConpaginacion,
+  updateStatusTarea,
+} from "@/types/types";
 // Importa las funciones necesarias para realizar las peticiones HTTP
 type formatedSelect = { value: number; label: string };
 interface TareasContextProps {
@@ -11,19 +20,25 @@ interface TareasContextProps {
   token: string;
   ObtenerTodosLosUsuariosPorSearch: (search: string) => Promise<[]>;
   nuevaTareaPost: (data: any) => Promise<any>;
-  nuevoUsuarioPost?: (data: any) => Promise<any>;
-  forgotPassword?: (data: string) => Promise<any>;
-  ObtenerTodasLasTareas?: () => Promise<any>;
-  resetPassword?: (data: any) => Promise<any>;
-  changueStatusTarea?: (data: any) => Promise<any>;
+  nuevoUsuarioPost: (data: nuevoUsuarioPostData) => Promise<boolean>;
+  forgotPassword: (data: string) => Promise<boolean>;
+  ObtenerTodasLasTareas: (
+    currentPage: number,
+    titulo: string
+  ) => Promise<tareaConpaginacion>;
+  resetPassword: (data: any) => Promise<boolean>;
+  changueStatusTarea: (data: updateStatusTarea) => Promise<boolean>;
   enviarComentariosTarea?: (data: any) => Promise<any>;
-  comentariosDeleteTarea?: (data: any) => Promise<any>;
-  deleteTarea?: (data: any) => Promise<any>;
-  editarTareaPath?: (data: any, id: number) => Promise<any>;
+  comentariosDeleteTarea: (data: comentarioDelete) => Promise<boolean>;
+  deleteTarea: (data: number) => Promise<boolean>;
+  editarTareaPath: (
+    data: editarTareaPostSinObjeto,
+    id: number
+  ) => Promise<boolean>;
   downloadFile?: (archivo: any, enlace: string) => Promise<any>;
-  borrarArchivo?: (archivoId: number, TareaId: number) => Promise<any>;
-  uploadFile?: (data: any) => Promise<any>;
-  generarReporte?: (data: any) => Promise<any>;
+  borrarArchivo: (archivoId: number, TareaId: number) => Promise<boolean>;
+  uploadFile: (data: FormData) => Promise<boolean>;
+  generarReporte: (data: generarReporte) => Promise<boolean>;
 }
 
 export const TareasContext = createContext<TareasContextProps>({
@@ -31,19 +46,19 @@ export const TareasContext = createContext<TareasContextProps>({
   token: "",
   ObtenerTodosLosUsuariosPorSearch: () => Promise.resolve([]),
   nuevaTareaPost: () => Promise.resolve([]),
-  nuevoUsuarioPost: () => Promise.resolve([]),
-  forgotPassword: () => Promise.resolve([]),
+  nuevoUsuarioPost: () => Promise.resolve(false),
+  forgotPassword: () => Promise.resolve(false),
   ObtenerTodasLasTareas: () => Promise.resolve([]),
-  resetPassword: () => Promise.resolve([]),
+  resetPassword: () => Promise.resolve(false),
   changueStatusTarea: () => Promise.resolve([]),
   enviarComentariosTarea: () => Promise.resolve([]),
-  comentariosDeleteTarea: () => Promise.resolve([]),
-  deleteTarea: () => Promise.resolve([]),
-  editarTareaPath: () => Promise.resolve([]),
+  comentariosDeleteTarea: () => Promise.resolve(false),
+  deleteTarea: () => Promise.resolve(false),
+  editarTareaPath: () => Promise.resolve(false),
   downloadFile: () => Promise.resolve([]),
-  borrarArchivo: () => Promise.resolve([]),
-  uploadFile: () => Promise.resolve([]),
-  generarReporte: () => Promise.resolve([]),
+  borrarArchivo: () => Promise.resolve(false),
+  uploadFile: () => Promise.resolve(false),
+  generarReporte: () => Promise.resolve([false]),
 });
 
 const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -83,7 +98,10 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log(error);
     }
   }
-  const editarTareaPath = async (data: any, id: number) => {
+  const editarTareaPath = async (
+    data: editarTareaPostSinObjeto,
+    id: number
+  ) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/tareas/${id}`,
@@ -104,6 +122,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const res = await response.json();
         toast.error(res.message);
+        return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
@@ -195,7 +214,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const deleteTarea = async (data: any) => {
+  const deleteTarea = async (data: number) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/tareas/${data}`,
@@ -215,13 +234,16 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const res = await response.json();
         toast.error(res.error);
+        return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
       return false;
     }
   };
-  const nuevoUsuarioPost = async (data: any) => {
+  const nuevoUsuarioPost = async (
+    data: nuevoUsuarioPostData
+  ): Promise<boolean> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/users`,
@@ -242,6 +264,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const res = await response.json();
         toast.error(res.message);
+        return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
@@ -249,7 +272,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const changueStatusTarea = async (data: any) => {
+  const changueStatusTarea = async (data: updateStatusTarea) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/tareas/${data.tarea_id}`,
@@ -270,6 +293,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const res = await response.json();
         toast.error(res.message);
+        return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
@@ -277,7 +301,10 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const ObtenerTodasLasTareas = async (current_page, titulo) => {
+  const ObtenerTodasLasTareas = async (
+    current_page: number,
+    titulo: string
+  ): Promise<tareaConpaginacion> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/tareas?page=${
@@ -293,9 +320,10 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       );
       const data = await response.json();
-      return data;
+      return data as tareaConpaginacion;
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
+      return []; // Return an empty array in case of error
     }
   };
 
@@ -335,7 +363,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const borrarArchivo = async (archivoId, TareaId) => {
+  const borrarArchivo = async (archivoId: number, TareaId: number) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/archivos/${archivoId}`,
@@ -356,13 +384,14 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const res = await response.json();
         toast.error(res.error);
+        return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
       return false;
     }
   };
-  const comentariosDeleteTarea = async (data: any) => {
+  const comentariosDeleteTarea = async (data: comentarioDelete) => {
     {
       try {
         const response = await fetch(
@@ -384,14 +413,16 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           const res = await response.json();
           toast.error(res.message);
+          return false;
         }
       } catch (error) {
         toast.error("Error en el servidor, intente más tarde");
+        return false;
       }
     }
   };
 
-  const forgotPassword = async (data: string) => {
+  const forgotPassword = async (data: string): Promise<boolean> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/forgot-password`,
@@ -414,13 +445,14 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         toast.error(
           data.error ?? "Error al enviar el correo, revisa el formato."
         );
+        return false;
       }
     } catch (error) {
       toast.error("Error al enviar el correo, revisa el formato.");
       return false;
     }
   };
-  const uploadFile = async (data: any) => {
+  const uploadFile = async (data: FormData) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/archivos`,
@@ -439,6 +471,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const data = await response.json();
         toast.error(data.error ?? "Error al subir el archivo.");
+        return false;
       }
     } catch (error) {
       toast.error("Error al subir el archivo.");
@@ -446,7 +479,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const generarReporte = async (data: any) => {
+  const generarReporte = async (data: generarReporte) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/generar-reporte`,
@@ -465,15 +498,17 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
 
         toast.success(response2.message);
 
-        const tableData = response2.reporte.tareas.map((tarea) => {
-          return [
-            tarea.titulo,
-            tarea.descripcion,
-            tarea.estado,
-            tarea.tiempo,
-            tarea.usuario,
-          ];
-        });
+        const tableData = response2.reporte.tareas.map(
+          (tarea: generarReportePDF) => {
+            return [
+              tarea.titulo,
+              tarea.descripcion,
+              tarea.estado,
+              tarea.tiempo,
+              tarea.usuario,
+            ];
+          }
+        );
 
         const head = ["Título", "Descripción", "Estado", "Tiempo", "Usuario"];
         autoTable(doc, {
@@ -503,6 +538,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await response.json();
 
         toast.error(data.error ?? "Error al generar el reporte");
+        return false;
       }
     } catch (error) {
       toast.error("Error al generar el reporte");
@@ -510,7 +546,7 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const resetPassword = async (data: any) => {
+  const resetPassword = async (data: resetPaswordData) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/reset-password`,
@@ -531,6 +567,8 @@ const TareasProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await response.json();
 
         toast.error(data.error ?? "Error al restablecer la contraña.");
+
+        return false;
       }
     } catch (error) {
       toast.error("Error al restablecer la contraña.");

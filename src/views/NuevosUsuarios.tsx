@@ -6,9 +6,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import useAuthContext from "@/hooks/useAuthContext";
 import { useTareasContext } from "@/hooks/useTareasContext";
-import { useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import AsyncSelect from "react-select/async";
 import { useState } from "react";
 import CircleLoader from "react-spinners/CircleLoader";
@@ -24,7 +23,7 @@ const NuevosUsuarios = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     const dataFormated = {
       email: data.email,
       name: data.name,
