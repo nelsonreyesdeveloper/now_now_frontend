@@ -1,4 +1,10 @@
-const Pagination = ({ currentPage, totalPages, handlePageChange }) => {
+import { Pagination as PaginationProps } from "@/types/types";
+
+const Pagination = ({
+  currentPage,
+  totalPages,
+  handlePageChange,
+}: PaginationProps) => {
   return (
     <div className="grid grid-cols-3  lg:gap-4 lg:w-5/12 mt-5">
       <button

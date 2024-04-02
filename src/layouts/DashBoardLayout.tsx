@@ -1,7 +1,6 @@
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
+import { CircleUser, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,39 +21,50 @@ export function Dashboard() {
   generateTitle("Tareas - Dashboard");
 
   const { token, logout, user, obteniendoUser } = useAuth();
+
   const navigate = useNavigate();
+  useEffect(() => {
+    if (user !== undefined) {
+      if (Object.keys(user).length > 0) {
+        if (user.defaultPassword === 1) {
+          navigate("/primer-ingreso");
+        }
+        if (
+          user.roles[0].name !== "super-admin" &&
+          user.defaultPassword === 0
+        ) {
+          navigate("/dashboard");
+        }
+      }
+    }
+  }, [user]); //eslint-disable-line
 
   useEffect(() => {
-    if (!token) {
-      navigate("/");
-    } else {
-      const response = obteniendoUser();
-
-      if (response === false) {
+    const fetchUser = async () => {
+      if (!token) {
         navigate("/");
-      }
-    }
-  }, [token]); //eslint-disable-line
+      } else {
+        const response = await obteniendoUser();
 
-  useEffect(() => {
-    if (user) {
-      if (user.defaultPassword === 1) {
-        navigate("/primer-ingreso");
+        if (response === false) {
+          navigate("/");
+        }
       }
-      if (user.roles[0].name !== "super-admin" && user.defaultPassword === 0) {
-        navigate("/dashboard");
-      }
-    }
-  }, [user]);
+    };
+
+    fetchUser();
+  }, [token]); //eslint-disable-line
 
   const { pathname } = useLocation();
 
   const onClickLogout = async () => {
     logout();
   };
-  if (!user) {
-    return null;
-  }
+
+  if (user === undefined) return null;
+
+  if (Object.keys(user).length === 0) return null;
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky bg-white  top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">

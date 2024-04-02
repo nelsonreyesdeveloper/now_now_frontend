@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useTareasContext } from "@/hooks/useTareasContext";
 import generateTitle from "@/utils/generateTitle";
 import PropagateLoader from "react-spinners/PropagateLoader";
@@ -13,6 +13,7 @@ const override: CSSProperties = {
   margin: "0 auto",
 };
 const RecuperarPassword = () => {
+  const { forgotPassword } = useTareasContext();
   generateTitle("Tareas - Recuperar Password");
   const {
     register,
@@ -22,10 +23,11 @@ const RecuperarPassword = () => {
   } = useForm();
   const [loading, setLoading] = useState(false);
 
-  const { forgotPassword } = useTareasContext();
-  const onSubmit = async (data: any) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true);
-    const response = await forgotPassword(data.email);
+    const email = data.email;
+
+    const response = await forgotPassword(email);
 
     if (response) {
       setValue("email", "");

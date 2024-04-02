@@ -4,16 +4,15 @@ import { FormDataReset } from "@/types/types";
 import { User } from "@/types/types";
 import { toast } from "react-toastify";
 
-import { useNavigate } from "react-router-dom";
 interface AuthContextProps {
   user: User;
-  token: string | null;
+  token: string ;
   isAuthenticated: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: User) => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
-  obteniendoUser: () => Promise<void>;
+  obteniendoUser: () => Promise<boolean>;
   resetPassword: (data: FormDataReset) => Promise<void>;
   passwordDefault: boolean;
   // Add other auth-related functions as needed
@@ -33,8 +32,10 @@ export const AuthContext = createContext<AuthContextProps>({
   setIsAuthenticated: () => {},
   login: async () => {},
   logout: () => {},
-  token: null,
-  obteniendoUser: async () => {},
+  token: '',
+  obteniendoUser: async () => {
+    return false;
+  },
   resetPassword: async () => {},
   passwordDefault: false,
 });
@@ -42,10 +43,10 @@ export const AuthContext = createContext<AuthContextProps>({
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>({} as User);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const tokenLocalStorage = localStorage.getItem("authToken");
-  const [token, setToken] = useState<string | null>(tokenLocalStorage);
+  const [token, setToken] = useState<string>(tokenLocalStorage as string);
   const [passwordDefault, setPasswordDefault] = useState(false);
 
   // Fetch initial authentication state from local storage (optional)
@@ -72,8 +73,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Logout error:", error);
     }
 
-    setUser(null);
-    setToken(null);
+    setUser({} as User);
+    setToken("");
     setIsAuthenticated(false);
     localStorage.removeItem("authToken");
   };
@@ -94,7 +95,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await response.json();
         setUser(data.user); // Update user state with data from response
         localStorage.setItem("authToken", data.access_token); // Store token for future use
-        setToken(data.access_token);
+        setToken(data.access_token as string);
         setIsAuthenticated(true);
       } else {
         const data = await response.json();
@@ -136,7 +137,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const obteniendoUser = async () => {
+  const obteniendoUser = async (): Promise<boolean> => {
     /* ir a api/user y obtener el user */
     try {
       const response = await fetch(
@@ -158,15 +159,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (data.defaultPassword === 0) {
           setPasswordDefault(!passwordDefault);
         }
+
+        return true;
       } else {
         localStorage.removeItem("authToken");
-
-        window.location.href = "/";
 
         return false;
       }
     } catch (error) {
       toast.error("Error en el servidor, intente más tarde");
+      return false;
     }
   };
 
@@ -174,10 +176,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value: AuthContextProps = {
     user,
+    token,
     isAuthenticated,
+    setUser,
+    setIsAuthenticated,
     login,
     logout,
-    token,
     obteniendoUser,
     resetPassword,
     passwordDefault,

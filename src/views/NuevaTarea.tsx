@@ -7,35 +7,46 @@ import {
 } from "@/components/ui/card";
 
 import { useEffect, useState } from "react";
-import { Input, Tex } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AsyncSelect from "react-select/async";
 import { useTareasContext } from "@/hooks/useTareasContext";
-import { set, useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CircleLoader from "react-spinners/CircleLoader";
 import useAuthContext from "@/hooks/useAuthContext";
 import { estadosTareas } from "../data/estados";
-import { Item, Menu, Submenu, useContextMenu } from "react-contexify";
-import Swal from "sweetalert2";
 import {
-  Check,
-  DeleteIcon,
-  Edit2Icon,
-  ShieldCloseIcon,
-  SidebarCloseIcon,
-} from "lucide-react";
+  Item,
+  ItemParams,
+  Menu,
+  Submenu,
+  useContextMenu,
+} from "react-contexify";
+import Swal from "sweetalert2";
+import { Check, DeleteIcon, Edit2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Modal from "react-modal";
 import { toast } from "react-toastify";
 import Pagination from "@/components/Pagination";
+import {
+  editarTareaPostSinObjeto,
+  generarReporte,
+  tarea,
+  updateStatusTarea,
+  User,
+} from "@/types/types";
+
+type propstarea = {
+  tarea: number;
+};
 
 const NuevaTarea = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [loadingTask, setLoadingTask] = useState(false);
-  const [updateArray, setUpdateArray] = useState({});
+  const [updateArray, setUpdateArray] = useState<tarea>({} as tarea);
   const [tareas, setTareas] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -55,12 +66,12 @@ const NuevaTarea = () => {
   } = useTareasContext();
   const { show } = useContextMenu({});
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
   const generarNuevoReporte = async () => {
-    const data = {
+    const data: generarReporte = {
       fecha_inicio: watch("fechaInicio"),
       fecha_fin: watch("fechaFinal"),
     };
@@ -81,11 +92,14 @@ const NuevaTarea = () => {
     });
     const response = await generarReporte(data);
 
-    
+    if (response) {
+      console.log(response);
+    }
+
     Swal.close();
   };
 
-  const handleDeleteTarea = async (tarea) => {
+  const handleDeleteTarea = async (tarea: tarea) => {
     Swal.fire({
       title: `¿Estas seguro que desea eliminar la tarea : ${tarea.titulo} ?`,
       text: "No podras revertir esta accion",
@@ -108,7 +122,7 @@ const NuevaTarea = () => {
         });
         const response = await deleteTarea(tarea.id);
         if (response) {
-          await getListadoTareas();
+          await getListadoTareas("");
         }
         Swal.close();
       }
@@ -118,7 +132,11 @@ const NuevaTarea = () => {
   useEffect(() => {
     Modal.setAppElement("body");
   }, [updateArray]);
-  function handleContextMenu(event, tareaId, estado) {
+  function handleContextMenu(
+    event: React.MouseEvent<HTMLTableRowElement, MouseEvent>,
+    tareaId: number,
+    estado: number
+  ) {
     show({
       id: tareaId,
       event,
@@ -127,16 +145,23 @@ const NuevaTarea = () => {
     });
   }
 
-  const handleItemClick = async ({ id, event, props }, estado) => {
-    const data = {
-      tarea_id: props.tarea,
+  const handleItemClick = async (
+    { id, event, props }: ItemParams<propstarea>,
+    estado: number
+  ) => {
+    // 2. Access data from props and construct payload (assuming 'tarea' prop holds task ID)
+    const tareaId = (props as { tarea: number }).tarea;
+
+    console.log(id, event);
+    const data2: updateStatusTarea = {
+      tarea_id: tareaId,
       estado_id: estado,
     };
 
-    const response = await changueStatusTarea(data);
+    const response = await changueStatusTarea(data2);
 
     if (response) {
-      getListadoTareas();
+      getListadoTareas("");
     }
   };
   const ObtenerTodosLosUsuariosData = async () => {
@@ -144,8 +169,8 @@ const NuevaTarea = () => {
     setUsers(data);
   };
 
-  const onSubmit = async (data) => {
-    const dataFormated = {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    const dataFormated: editarTareaPostSinObjeto = {
       titulo: data.titulo,
       descripcion: data.descripcion,
       user_id: data.user.value,
@@ -160,7 +185,7 @@ const NuevaTarea = () => {
       setValue("titulo", "");
       setValue("descripcion", "");
       setValue("user", "");
-      await getListadoTareas();
+      await getListadoTareas("");
     }
     setLoading(false);
 
@@ -169,9 +194,10 @@ const NuevaTarea = () => {
     }
   };
 
-  const getListadoTareas = async (titulo) => {
+  const getListadoTareas = async (titulo: string) => {
     if (!user || user.defaultPassword === 1) return;
     const resultado = await ObtenerTodasLasTareas(currentPage, titulo);
+
     if (resultado) {
       setTareas(resultado.tareas.data);
       setCurrentPage(resultado.tareas.current_page);
@@ -180,7 +206,6 @@ const NuevaTarea = () => {
     setLoadingTask(false);
   };
 
-  let subtitle;
   const [modalIsOpen, setIsOpen] = useState(false);
 
   function openModal() {
@@ -188,7 +213,7 @@ const NuevaTarea = () => {
   }
 
   function closeModal() {
-    setUpdateArray({});
+    setUpdateArray({} as tarea);
     setValue("titulo", "");
     setValue("descripcion", "");
     setValue("user", "");
@@ -197,7 +222,7 @@ const NuevaTarea = () => {
 
   useEffect(() => {
     setLoadingTask(true);
-    getListadoTareas();
+    getListadoTareas("");
   }, [currentPage]);
 
   useEffect(() => {
@@ -235,7 +260,7 @@ const NuevaTarea = () => {
                   getListadoTareas(e.target.value);
                 } else {
                   setLoadingTask(true);
-                  getListadoTareas();
+                  getListadoTareas("");
                 }
               }}
               // {...register("search")}
@@ -246,7 +271,7 @@ const NuevaTarea = () => {
               onClick={() => {
                 setLoadingTask(true);
                 setValue("search", "");
-                getListadoTareas();
+                getListadoTareas("");
               }}
               className="underline"
             >
@@ -339,7 +364,7 @@ const NuevaTarea = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {tareas.map((tarea) => (
+                      {tareas.map((tarea: tarea) => (
                         <>
                           <tr
                             key={tarea.id}
