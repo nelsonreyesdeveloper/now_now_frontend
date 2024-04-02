@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import image from "../assets/img/full-stack-developer-programacion.jpg";
 
 import "react-toastify/dist/ReactToastify.css";
 export function AuthLayout() {
@@ -9,7 +8,7 @@ export function AuthLayout() {
       <div className="hidden bg-muted lg:block">
         <img
           className=" h-[100%] w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          src={image}
+          src="img/full-stack-developer-programacion.jpg"
           alt=""
         />
       </div>
