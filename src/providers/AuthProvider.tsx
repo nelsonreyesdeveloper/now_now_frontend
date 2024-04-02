@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 
 interface AuthContextProps {
   user: User;
-  token: string | null;
+  token: string ;
   isAuthenticated: boolean;
   setUser: (user: User) => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
@@ -32,7 +32,7 @@ export const AuthContext = createContext<AuthContextProps>({
   setIsAuthenticated: () => {},
   login: async () => {},
   logout: () => {},
-  token: null,
+  token: '',
   obteniendoUser: async () => {
     return false;
   },
@@ -46,7 +46,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User>({} as User);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const tokenLocalStorage = localStorage.getItem("authToken");
-  const [token, setToken] = useState<string | null>(tokenLocalStorage);
+  const [token, setToken] = useState<string>(tokenLocalStorage as string);
   const [passwordDefault, setPasswordDefault] = useState(false);
 
   // Fetch initial authentication state from local storage (optional)
@@ -74,7 +74,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     setUser({} as User);
-    setToken(null);
+    setToken("");
     setIsAuthenticated(false);
     localStorage.removeItem("authToken");
   };
@@ -95,7 +95,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await response.json();
         setUser(data.user); // Update user state with data from response
         localStorage.setItem("authToken", data.access_token); // Store token for future use
-        setToken(data.access_token);
+        setToken(data.access_token as string);
         setIsAuthenticated(true);
       } else {
         const data = await response.json();

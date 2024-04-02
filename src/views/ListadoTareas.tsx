@@ -6,26 +6,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTareasContext } from "@/hooks/useTareasContext";
-import { useState, useEffect, ChangeEvent, BaseSyntheticEvent } from "react";
+import { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 import useAuthContext from "@/hooks/useAuthContext";
 import { FaCommentDots, FaPaperclip } from "react-icons/fa";
-import { Menu, Item, useContextMenu } from "react-contexify";
+import { Menu, Item, useContextMenu, ItemParams } from "react-contexify";
 import "react-contexify/ReactContexify.css";
 import { toast } from "react-toastify";
 import { estadosTareas } from "@/data/estados";
 import { Check, DeleteIcon, Send, UploadCloud } from "lucide-react";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Input } from "@/components/ui/input";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { FieldValues, useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import Pagination from "@/components/Pagination";
 import validateFileType from "@/utils/validateExtension";
-import { comentarioDelete, tarea } from "@/types/types";
+import { comentarioDelete, comentarioPost, tarea } from "@/types/types";
 
-type comentario = {
-  tarea_id: number;
-  comentario: string;
-};
 const ListadoTareas = () => {
   const {
     ObtenerTodasLasTareas,
@@ -114,19 +110,19 @@ const ListadoTareas = () => {
   };
 
   function handleContextMenu(
-    event: MouseEvent<HTMLElement, MouseEvent>,
+    event: MouseEvent<HTMLSpanElement>,
     tareaId: number,
     estado: number
   ) {
     show({
       id: tareaId,
-      event,
+      event: event,
       position: { x: event.clientX - 250, y: event.clientY },
       props: { tarea: tareaId, estado: estado },
     });
   }
 
-  const handleItemClick = async ({ id, event, props }, estado: number) => {
+  const handleItemClick = async ({ props }: ItemParams, estado: number) => {
     const data = {
       tarea_id: props.tarea,
       estado_id: estado,
@@ -190,7 +186,7 @@ const ListadoTareas = () => {
 
   const enviarComentarios = async (data: FieldValues, id: number) => {
     const recortarComentario = data[`comentario-${id}`].trim();
-    const data2: comentario = {
+    const data2: comentarioPost = {
       tarea_id: id,
       comentario: recortarComentario,
     };
@@ -217,7 +213,7 @@ const ListadoTareas = () => {
   useEffect(() => {
     setLoading(true);
     getListadoTareas("");
-  }, [currentPage]);
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Card>
@@ -371,7 +367,7 @@ const ListadoTareas = () => {
                       </button>
                       <label
                         className="text-blue-500"
-                        onClick={(e) => {
+                        onClick={() => {
                           if (selectedFile.includes(tarea.id)) {
                             setSelectedFile(
                               selectedFile.filter((id) => id !== tarea.id)
@@ -510,7 +506,7 @@ const ListadoTareas = () => {
 
                                   <div className="flex flex-row  justify-between gap-x-2 items-center">
                                     <a
-                                      onClick={async (e) => {
+                                      onClick={async () => {
                                         Swal.fire({
                                           title: "Cargando...",
                                           text: "Por favor, espere...",

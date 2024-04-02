@@ -34,6 +34,7 @@ import {
   generarReporte,
   tarea,
   updateStatusTarea,
+  User,
 } from "@/types/types";
 
 type propstarea = {
@@ -41,7 +42,7 @@ type propstarea = {
 };
 
 const NuevaTarea = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [loadingTask, setLoadingTask] = useState(false);
@@ -196,7 +197,7 @@ const NuevaTarea = () => {
   const getListadoTareas = async (titulo: string) => {
     if (!user || user.defaultPassword === 1) return;
     const resultado = await ObtenerTodasLasTareas(currentPage, titulo);
-    console.log(resultado);
+
     if (resultado) {
       setTareas(resultado.tareas.data);
       setCurrentPage(resultado.tareas.current_page);

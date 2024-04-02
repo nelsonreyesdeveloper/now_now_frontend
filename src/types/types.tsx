@@ -82,10 +82,13 @@ export type tarea = {
   archivos: [
     {
       id: number;
-      archivo: string;
+      nombreOriginal: string;
+      ruta: string;
       tarea_id: number;
       created_at: string;
       updated_at: string;
+      user: User;
+      user_id: number;
     }
   ];
 };
@@ -129,4 +132,20 @@ export type tareaConpaginacion = {
     last_page: number;
     data: [];
   };
+};
+
+export type comentarioPost = {
+  tarea_id: number;
+  comentario: string;
+};
+
+export type archivo = {
+  id: number;
+  nombreOriginal: string;
+  ruta: string;
+  tarea_id: number;
+  created_at: string;
+  updated_at: string;
+  user: User;
+  user_id: number;
 };
